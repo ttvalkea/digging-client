@@ -1,0 +1,137 @@
+<span class="user-amount">Number of players: {{signalRService.connectionAmount}}</span>
+<span class="refresher">{{refresher}}</span>
+
+<div id="play-area" (keydown)="onKeyDown($event)" [ngStyle]="
+  {
+    'width.px': constants.PLAY_AREA_SIZE_X * constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+    'height.px': constants.PLAY_AREA_SIZE_Y * constants.POSITION_TO_DISPLAY_MULTIPLAYER
+  }">
+  <div *ngIf="signalRService.winner">
+    <div class="game-end-banner" [ngStyle]="
+      {
+        'width.px': constants.PLAY_AREA_SIZE_X * constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'background-color': signalRService.winner.playerColor
+      }">
+      <span>{{ signalRService.winner.id === clientPlayer.id ? 'You\'re the winner!' : 'You lost.' }}</span>
+    </div>
+  </div>
+  <div *ngFor="let player of signalRService.players">
+    <div class="player" [ngClass]="(signalRService.tagPlayerId && signalRService.tagPlayerId === player.id) ? 'player-is-tag' : ''" [ngStyle]="
+      {
+        'margin-top.px': player.positionY*constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'margin-left.px': player.positionX*constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'background': player.hitPoints > 0 ? player.playerColor : '#333',
+        'border': '1px solid ' + player.playerColor,
+        'width.px': player.sizeX*constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'height.px': player.sizeY*constants.POSITION_TO_DISPLAY_MULTIPLAYER
+      }">
+      <span>{{player.score}}/{{constants.SCORE_NEEDED_TO_WIN}}<span *ngIf="signalRService.tagPlayerId && signalRService.tagPlayerId === player.id">★</span></span>
+      <span *ngIf="player.id === clientPlayer.id" [ngStyle]="
+        {
+          'transform': 'rotate(' + clientPlayer.direction + 'deg)'
+        }
+      ">--></span>
+      <span>{{player.hitPoints}}hp</span>
+    </div>
+  </div>
+  <div *ngFor="let fireball of signalRService.fireballs">
+    <div class="fireball" [ngStyle]="
+      {
+        'margin-top.px': fireball.positionY*constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'margin-left.px': fireball.positionX*constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'width.px': fireball.sizeX*constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'height.px': fireball.sizeY*constants.POSITION_TO_DISPLAY_MULTIPLAYER
+      }">
+      <span>O</span>
+    </div>
+  </div>
+  <div *ngFor="let obstacle of signalRService.obstacles">
+    <div class="obstacle" [ngStyle]="
+      {
+        'margin-top.px': obstacle.positionY*constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'margin-left.px': obstacle.positionX*constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'width.px': obstacle.sizeX*constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'height.px': obstacle.sizeY*constants.POSITION_TO_DISPLAY_MULTIPLAYER
+      }">
+      <span></span>
+    </div>
+  </div>
+  <div *ngIf="signalRService.tagItem && signalRService.tagItem.isInPlay">
+    <div class="tag-item" [ngStyle]="
+      {
+        'margin-top.px': signalRService.tagItem.positionY*constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'margin-left.px': signalRService.tagItem.positionX*constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'width.px': signalRService.tagItem.sizeX*constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'height.px': signalRService.tagItem.sizeY*constants.POSITION_TO_DISPLAY_MULTIPLAYER
+      }">
+      <span>★</span>
+    </div>
+  </div>
+</div>
+<div class="button-container" [ngStyle]="
+  {
+    'top.px': constants.PLAY_AREA_SIZE_Y * constants.POSITION_TO_DISPLAY_MULTIPLAYER + 25,
+    'width.px': constants.PLAY_AREA_SIZE_X * constants.POSITION_TO_DISPLAY_MULTIPLAYER - 10,
+    'height.px': 100
+  }">
+  <div class="stat-indicators">
+    <div>
+      <span [ngStyle]="
+      {
+        'background-color': clientPlayer.playerColor
+      }">Your hit points:
+      </span><strong> {{clientPlayer.hitPoints}} <span *ngIf="clientPlayer.hitPoints <= 0">Knocked out!</span></strong>
+    </div>
+    <div>
+      <span [ngStyle]="
+      {
+        'background-color': 'blue',
+        'color': 'white'
+      }">Your energy:
+      </span><strong> {{manaAmount}}</strong>
+      <div>
+        <span class='mana-bar mana-bar-bottom' [ngStyle]="
+        {
+          'width.px': constants.PLAYER_STARTING_MANA * 1.5
+        }"></span>
+        <span class='mana-bar mana-bar-top' [ngStyle]="
+        {
+          'width.px': manaAmount * 1.5
+        }"></span>
+      </div>
+    </div>
+    <div class="float-right" [ngStyle]="
+    {
+      'width.px': constants.PLAY_AREA_SIZE_X * constants.POSITION_TO_DISPLAY_MULTIPLAYER - 10
+    }">
+      <span>Your score: </span><strong> {{clientPlayer.score}} / {{constants.SCORE_NEEDED_TO_WIN}}</strong>
+    </div>
+  </div>
+</div>
+<div class="server-control-button-container" [ngStyle]="
+  {
+    'top.px': constants.PLAY_AREA_SIZE_Y * constants.POSITION_TO_DISPLAY_MULTIPLAYER + 130,
+    'width.px': constants.PLAY_AREA_SIZE_X * constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+    'height.px': 30
+  }">
+  <button (click)="signalRService.broadcastGetObstacles(true)">Generate obstacles</button>
+</div>
+<div class="instructions"[ngStyle]="
+{
+  'left.px': constants.PLAY_AREA_SIZE_X * constants.POSITION_TO_DISPLAY_MULTIPLAYER + 30
+}">
+  <button (click)="showInstructions = !showInstructions">{{showInstructions ? 'Hide' : 'Show'}} instructions</button>
+  <div *ngIf="showInstructions">
+    <h1>Instructions</h1>
+    <p>This is a game of tag. Whenever you're the tag, you'll get points. When you reach {{constants.SCORE_NEEDED_TO_WIN}} points, you win!</p>
+    <p>To become the tag, grab the blinking circle with a star inside it. You also become the tag by knocking out the player who is currently the tag.</p>
+    <h2>Controls</h2>
+    <p><strong>Up arrow</strong>: Start moving (or stop if moving backwards)</p>
+    <p><strong>Down arrow</strong>: Start moving backwards (or stop if moving forward)</p>
+    <p><strong>Left and right arrow</strong>: Turn your direction left or right</p>
+    <p><strong>Ctrl</strong>: Shoot a fireball</p>
+    <p>When you hit an opponent with a fireball, they take one damage. Once hit five times, a player will be knocked out for a brief moment before being back in action.</p>
+    <p>Flinging a fireball takes energy and you can't do it unless you have enough energy. You regenerate energy automatically.</p>
+
+  </div>
+</div>
