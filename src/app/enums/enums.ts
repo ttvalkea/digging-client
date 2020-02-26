@@ -3,8 +3,7 @@ export enum OnCollisionAction {
   Destroy
 }
 
-export enum MovementState {
-  Stopped = 1,
-  Forward,
-  Backward
+export enum TerrainType {
+  Empty = 1,
+  Obstacle
 }

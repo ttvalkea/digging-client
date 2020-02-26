@@ -4,11 +4,13 @@ import { environment } from '../../environments/environment';
 import { Player } from '../models/Player.model';
 import { Fireball } from '../models/Fireball.model';
 import { Obstacle } from '../models/Obstacle.model';
-import { OnCollisionAction } from '../enums/enums';
+import { OnCollisionAction, TerrainType } from '../enums/enums';
 import { ItemBase } from '../models/ItemBase.model';
 import { FireballHitPlayerData } from '../models/FireballHitPlayerData.model';
 import { Utilities } from '../utils/utilities';
 import { NewTagItem } from '../models/NewTagItem.model';
+import { TerrainInfo } from '../models/TerrainInfo.model';
+import { Coordinate } from '../models/Coordinate';
 
 @Injectable({
   providedIn: 'root'
@@ -23,6 +25,7 @@ export class SignalRService {
   public tagPlayerId: string; //Id of the player who is currently gaining victory points.
   public tagItem: NewTagItem;
   public winner: Player;
+  public emptySpaces: Coordinate[] = [];
 
   public startConnection = () => {
     const isProductionEnvironment = environment.production;
@@ -133,8 +136,8 @@ export class SignalRService {
   }
 
   public addBroadcastGetObstaclesListener = (functionAfterSettingObstacles: Function) => {
-    this.hubConnection.on('broadcastGetObstacles', (data: Obstacle[]) => {
-      this.obstacles = data;
+    this.hubConnection.on('broadcastGetObstacles', (data: Coordinate[]) => {
+      this.obstacles = data.map(obstaclePosition => new Obstacle(null, obstaclePosition.x, obstaclePosition.y, 0));
       functionAfterSettingObstacles();
     })
   }
@@ -169,6 +172,21 @@ export class SignalRService {
   public addBroadcastPlayerWinsListener = () => {
     this.hubConnection.on('broadcastPlayerWins', (player: Player) => {
       this.winner = player;
+    })
+  }
+
+  public getOtherPlayers = (playerId: string) => this.players.filter(player => player.id !== playerId);
+
+  public broadcastDigMessage = (positionX: number, positionY: number) => {
+    this.hubConnection.invoke('broadcastDigMessage', positionX, positionY)
+    .catch(err => console.error(err));
+  }
+
+  public addBroadcastDigMessageListener = () => {
+    this.hubConnection.on('broadcastDigMessage', (terrainInfo: TerrainInfo) => {
+      if (terrainInfo.terrainType === TerrainType.Empty && !this.emptySpaces.some(emptySpace => emptySpace.x === terrainInfo.coordinate.x && emptySpace.y === terrainInfo.coordinate.y)) {
+        this.emptySpaces.push(new Coordinate(terrainInfo.coordinate.x, terrainInfo.coordinate.y));
+      }
     })
   }
 }

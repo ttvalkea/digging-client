@@ -6,7 +6,8 @@ import { Player } from './models/Player.model';
 import { Fireball } from './models/Fireball.model';
 import { Constants } from './constants/constants';
 import { Utilities } from './utils/utilities';
-import { OnCollisionAction, MovementState } from './enums/enums';
+import { OnCollisionAction } from './enums/enums';
+import { Obstacle } from './models/Obstacle.model';
 
 
 //TODO: Refactor different entities into their own files (Player etc)
@@ -23,21 +24,24 @@ export class AppComponent implements OnInit {
 
   public refresher: number = 1; //This will just flick between 1 and -1 indefinitely, ensuring DOM refreshing.
   public constants = Constants; //This is declared for Angular template to have access to constants
+  public utilities = Utilities; //This is declared for Angular template to have access to utilities
 
   public showInstructions: boolean = true;
   public hasPlayerStartingPositionBeenSet: boolean = false;
+
+  public playAreaBorderObstacles: Obstacle[];
 
   constructor(public signalRService: SignalRService, private http: HttpClient) {
     this.clientPlayer.id = Utilities.generateId();
     this.clientPlayer.playerName = 'A';
     this.clientPlayer.playerColor = Utilities.getRandomPlayerColor();
-    this.clientPlayer.sizeX = Constants.PLAYER_SIZE_X;
-    this.clientPlayer.sizeY = Constants.PLAYER_SIZE_Y;
     this.clientPlayer.hitPoints = Constants.PLAYER_STARTING_HIT_POINTS;
     this.clientPlayer.direction = 0;
     this.clientPlayer.score = 0;
     this.clientPlayer.positionX = 0;
     this.clientPlayer.positionY = 0;
+
+    this.playAreaBorderObstacles = this.getPlayAreaBorderObstacles();
   }
 
   ngOnInit() {
@@ -51,23 +55,12 @@ export class AppComponent implements OnInit {
     this.signalRService.addNewTagListener();
     this.signalRService.addBroadcastPlayerBecomesTagListener();
     this.signalRService.addBroadcastPlayerWinsListener();
+    this.signalRService.addBroadcastDigMessageListener();
 
     this.startHttpRequest();
 
     //Refresher makes sure that clients update dom all the time
     setInterval(() => {this.refresher=this.refresher*-1}, Constants.REFRESHER_REFRESH_RATE_MS);
-
-    //Player's movement interval
-    setInterval(() => {
-      switch (this.clientPlayer.movementState) {
-        case MovementState.Forward:
-          this.go();
-          break;
-        case MovementState.Backward:
-          this.goBackwards();
-          break;
-      }
-    }, this.clientPlayer.movementIntervalMs);
 
     //Player's mana regeneration
     setInterval(() => { if (this.manaAmount < Constants.PLAYER_STARTING_MANA) this.manaAmount++; }, Constants.PLAYER_MANA_REGENERATION_INTERVAL);
@@ -93,16 +86,27 @@ export class AppComponent implements OnInit {
       })
   }
 
+  private getPlayAreaBorderObstacles = () => {
+    const obstacles = [];
+    for (let i=0; i<Constants.PLAY_AREA_SIZE_X+2; i++) {
+      obstacles.push(new Obstacle('', i-1, -1, 0));
+      obstacles.push(new Obstacle('', i-1, Constants.PLAY_AREA_SIZE_Y, 0));
+    }
+    for (let i=0; i<Constants.PLAY_AREA_SIZE_Y+2; i++) {
+      obstacles.push(new Obstacle('', -1, i-1, 0));
+      obstacles.push(new Obstacle('', Constants.PLAY_AREA_SIZE_X, i-1, 0));
+    }
+    return obstacles;
+  }
+
   public setStartingPosition = () => {
     if (!this.hasPlayerStartingPositionBeenSet) {
       let isPositionOk = false;
 
       while (!isPositionOk) {
-        this.clientPlayer.positionX = Utilities.getRandomNumber(0, Constants.PLAY_AREA_SIZE_X-this.clientPlayer.sizeX);
-        this.clientPlayer.positionY = Utilities.getRandomNumber(0, Constants.PLAY_AREA_SIZE_Y-this.clientPlayer.sizeY);
+        this.clientPlayer.positionX = Utilities.getRandomNumber(0, Constants.PLAY_AREA_SIZE_X - 1);
+        this.clientPlayer.positionY = Utilities.getRandomNumber(0, Constants.PLAY_AREA_SIZE_Y - 1);
         isPositionOk = true;
-        console.log(this.clientPlayer)
-        console.log(this.signalRService.obstacles)
         Utilities.doItemCollision(this.clientPlayer, this.signalRService.obstacles, () => {
           isPositionOk = false;
         });
@@ -122,12 +126,10 @@ export class AppComponent implements OnInit {
       this.signalRService.broadcastFireballDataMessage(new Fireball(
         Utilities.generateId(),
         this.clientPlayer.id,
-        this.clientPlayer.positionX+Math.floor(this.clientPlayer.sizeX/2)-Math.floor(Constants.FIREBALL_SIZE_X/2),
-        this.clientPlayer.positionY+Math.floor(this.clientPlayer.sizeY/2)-Math.floor(Constants.FIREBALL_SIZE_Y/2),
+        this.clientPlayer.positionX,
+        this.clientPlayer.positionY,
         this.clientPlayer.direction,
-        Constants.FIREBALL_MOVEMENT_INTERVAL,
-        Constants.FIREBALL_SIZE_X,
-        Constants.FIREBALL_SIZE_Y
+        Constants.FIREBALL_MOVEMENT_INTERVAL
       ));
     }
   }
@@ -137,55 +139,61 @@ export class AppComponent implements OnInit {
   onKeyDown(event:KeyboardEvent) {
     switch (event.key) {
       case "ArrowUp":
-        this.forwardInput();
+        this.clientPlayer.direction = 270;
+        this.go();
         break;
       case "ArrowDown":
-        this.backwardInput();
+        this.clientPlayer.direction = 90;
+        this.go();
         break;
       case "ArrowLeft":
-        this.turnLeft();
+        this.clientPlayer.direction = 180;
+        this.go();
         break;
       case "ArrowRight":
-        this.turnRight();
+        this.clientPlayer.direction = 0;
+        this.go();
         break;
       case "Control":
         this.cast();
+        break;
+      case "Shift":
+        this.dig();
         break;
       default:
         break;
       }
   }
 
-  forwardInput = () => {
-    this.clientPlayer.movementState = this.clientPlayer.movementState === MovementState.Backward ? MovementState.Stopped : MovementState.Forward;
-  }
-
-  backwardInput = () => {
-    this.clientPlayer.movementState = this.clientPlayer.movementState === MovementState.Forward ? MovementState.Stopped : MovementState.Backward;
-  }
-
-  turnRight = () => {
-    if (this.clientPlayer.hitPoints > 0) {
-      this.clientPlayer.direction = ((this.clientPlayer.direction + Constants.PLAYER_ROTATE_ANGLE_AMOUNT) % 360);
-    }
-  }
-  turnLeft = () => {
-    if (this.clientPlayer.hitPoints > 0) {
-      this.clientPlayer.direction = ((this.clientPlayer.direction - Constants.PLAYER_ROTATE_ANGLE_AMOUNT) % 360);
-      if (this.clientPlayer.direction < 0) {
-        this.clientPlayer.direction = 360 + this.clientPlayer.direction;
-      };
-    }
-  }
   go = () => {
     if (this.clientPlayer.hitPoints > 0 && !this.signalRService.winner) {
       this.clientPlayer.move(this.clientPlayer, this.clientPlayer.direction, this.postMovementAction, OnCollisionAction.Stop, this.signalRService.obstacles);
     }
   }
-  goBackwards = () => {
+
+  dig = () => {
     if (this.clientPlayer.hitPoints > 0 && !this.signalRService.winner) {
-      this.clientPlayer.move(this.clientPlayer, this.clientPlayer.direction-180, this.postMovementAction, OnCollisionAction.Stop, this.signalRService.obstacles);
-      this.clientPlayer.direction += 180;
+      const xAndYIncrement = {
+        x: 0,
+        y: 0
+      }
+      switch (this.clientPlayer.direction) {
+        case 0: //Right
+          xAndYIncrement.x = 1;
+          break;
+        case 90: //Down
+          xAndYIncrement.y = 1;
+          break;
+        case 180: //Left
+          xAndYIncrement.x = -1;
+          break;
+        case 270: //Up
+          xAndYIncrement.y = -1;
+          break;
+        default:
+          throw "Unsupported direction: " + this.clientPlayer.direction;
+      }
+      this.signalRService.broadcastDigMessage(this.clientPlayer.positionX + xAndYIncrement.x, this.clientPlayer.positionY + xAndYIncrement.y)
     }
   }
 

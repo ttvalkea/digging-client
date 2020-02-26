@@ -4,9 +4,9 @@
   right: 10px;
 }
 
-#play-area {
+.play-area {
   position: absolute;
-  background-image: linear-gradient(#494, #4b4);
+  background-image: linear-gradient(rgb(185, 145, 34), rgb(105, 82, 7));
 }
 
 .button-container {
@@ -15,18 +15,13 @@
   text-align: center;
   padding: 0 5px 0 5px;
 }
+
 .server-control-button-container {
   position: absolute;
   background: #444;
   text-align: right;
 }
 
-.movement-button {
-  padding: 8px;
-}
-.player-is-tag {
-  border: 3px dashed white !important;
-}
 .player {
   position: absolute;
   border-radius: 15px;
@@ -38,33 +33,21 @@
 
 .fireball {
   position: absolute;
-  border-radius: 15px;
+  border-radius: 25px;
   text-align: center;
   background-image: linear-gradient(red, yellow);
-}
-
-.tag-item {
-  position: absolute;
-  border-radius: 15px;
-  text-align: center;
-  animation-name: tag-item-animation;
-  animation-duration: 2s;
-  animation-iteration-count: infinite;
-  border: 2px dashed white;
-  color: #fa0;
-}
-
-@keyframes tag-item-animation {
-  from {background-color: #fff;}
-  to {background-color: #0f0;}
 }
 
 .obstacle {
   position: absolute;
   border-radius: 5px;
-  background-image: linear-gradient(#666, #333);
+  background-image: linear-gradient(#888, #555);
 }
 
+.empty-space {
+  position: absolute;
+  background-color:#330;
+}
 .stat-indicators {
   position: absolute;
   top: 10px;
@@ -104,4 +87,7 @@
   position: absolute;
   border: 1px solid black;
   padding: 0 5px 0 5px;
+}
+.border-obstacle {
+  background-image: linear-gradient(#555, #333);
 }

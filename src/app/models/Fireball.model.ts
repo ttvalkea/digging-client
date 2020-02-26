@@ -5,7 +5,7 @@ export class Fireball extends ItemBase {
   moveIntervalMs: number;
   isDestroyed: Boolean = false;
 
-  constructor(id: string, casterId: string, positionX: number, positionY: number, direction: number, moveIntervalMs: number, sizeX: number, sizeY: number) {
+  constructor(id: string, casterId: string, positionX: number, positionY: number, direction: number, moveIntervalMs: number) {
 
     super();
 
@@ -15,7 +15,5 @@ export class Fireball extends ItemBase {
     this.positionY = positionY;
     this.direction = direction;
     this.moveIntervalMs = moveIntervalMs;
-    this.sizeX = sizeX;
-    this.sizeY = sizeY;
   }
 };

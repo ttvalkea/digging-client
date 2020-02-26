@@ -3,9 +3,39 @@ import { ItemBase } from '../models/ItemBase.model';
 import { OnCollisionAction } from '../enums/enums';
 import { Obstacle } from '../models/Obstacle.model';
 import { Constants } from '../constants/constants';
+import { Player } from '../models/Player.model';
+import { Coordinate } from '../models/Coordinate';
 
 
 export class Utilities {
+
+  public static getItemDisplayPositionX = (player: Player, item: ItemBase) => {
+    return item.positionX - player.positionX;
+  }
+
+  public static getItemDisplayPositionY = (player: Player, item: ItemBase) => {
+    return item.positionY - player.positionY;
+  }
+
+  public static getCoordinateDisplayPositionX = (player: Player, item: Coordinate) => {
+    return item.x - player.positionX;
+  }
+
+  public static getCoordinateDisplayPositionY = (player: Player, item: Coordinate) => {
+    return item.y - player.positionY;
+  }
+
+  public static isItemInPlayersView = (player: Player, item: ItemBase) => {
+    return Math.abs(item.positionX - player.positionX) <= Constants.VIEW_RADIUS && Math.abs(item.positionY - player.positionY) <= Constants.VIEW_RADIUS;
+  }
+
+  public static getItemsInPlayersView = (player: Player, items: ItemBase[]) => items.filter(item => Utilities.isItemInPlayersView(player, item));
+
+  public static isCoordinateInPlayersView = (player: Player, item: Coordinate) => {
+    return Math.abs(item.x - player.positionX) <= Constants.VIEW_RADIUS && Math.abs(item.y - player.positionY) <= Constants.VIEW_RADIUS;
+  }
+
+  public static getCoordinatesInPlayersView = (player: Player, items: Coordinate[]) => items.filter(item => Utilities.isCoordinateInPlayersView(player, item));
 
   public static getRandomPlayerColor = () => {
     const colorNumber = Utilities.getRandomNumber(1, 18);
@@ -56,59 +86,57 @@ export class Utilities {
   public static getRandomNumber = (min: number, max: number) => Math.floor((Math.random() * max) + min);
 
   public static areItemsColliding = (item1: ItemBase, item2: ItemBase) => {
-    return  Math.abs((item1.positionX + item1.sizeX/2) - (item2.positionX + item2.sizeX/2)) < (item1.sizeX+item2.sizeX)/2 &&
-            Math.abs((item1.positionY + item1.sizeY/2) - (item2.positionY + item2.sizeY/2)) < (item1.sizeY+item2.sizeY)/2;
+    return item1.positionX === item2.positionX && item1.positionY === item2.positionY;
   }
 
   public static doItemCollision = (collidingItem: ItemBase, itemsToCollideWith: ItemBase[], actionOnCollision: Function) => {
-    for (let i = 0; i < itemsToCollideWith.length; i++) {
-      const collision = Utilities.areItemsColliding(collidingItem, itemsToCollideWith[i]);
-      if (collision) {
-        actionOnCollision(itemsToCollideWith[i]);
-        return;
-      }
+    for (let i = 0; i < itemsToCollideWith.filter(item => item.positionX === collidingItem.positionX && item.positionY === collidingItem.positionY).length; i++) {
+      actionOnCollision(itemsToCollideWith[i]);
+      return;
     }
   }
 
-  private static convertAngleToRadians = (angle) => angle * (Math.PI / 180);
-  public static getXAndYIncrementsByAngle = (angle: number) => {
-    const angleInRadians = Utilities.convertAngleToRadians(angle);
-    return {
-      x: Math.cos(angleInRadians),
-      y: Math.sin(angleInRadians)
-    }
-  }
-
-  public static angledMoveFunction = (mover, direction: number, postMovementAction: Function, onCollisionAction: OnCollisionAction = OnCollisionAction.Stop, obstacles: Obstacle[] = []) => {
-
+  public static fourDirectionMoveFunction = (mover, direction: number, postMovementAction: Function, onCollisionAction: OnCollisionAction = OnCollisionAction.Stop, obstacles: Obstacle[] = []) => {
     mover.direction = direction;
-    const xAndYIncrement = Utilities.getXAndYIncrementsByAngle(direction);
-
+    const xAndYIncrement = {
+      x: 0,
+      y: 0
+    }
+    switch (direction) {
+      case 0: //Right
+        xAndYIncrement.x = 1;
+        break;
+      case 90: //Down
+        xAndYIncrement.y = 1;
+        break;
+      case 180: //Left
+        xAndYIncrement.x = -1;
+        break;
+      case 270: //Up
+        xAndYIncrement.y = -1;
+        break;
+      default:
+        throw "Unsupported direction: " + direction;
+    }
+    mover.positionX += xAndYIncrement.x;
+    mover.positionY += xAndYIncrement.y;
     if (onCollisionAction === OnCollisionAction.Destroy) {
-      mover.positionX += xAndYIncrement.x;
-      mover.positionY += xAndYIncrement.y;
       Utilities.doItemCollision(mover, obstacles, () => {
         mover.isDestroyed = true;
       });
     } else if (onCollisionAction === OnCollisionAction.Stop) {
-      //For stopping objects, movement is done in two parts to have the object "slide" along an obstacle instead of stopping fully if colliding even a little bit.
-      mover.positionX += xAndYIncrement.x;
       Utilities.doItemCollision(mover, obstacles, () => {
         mover.positionX -= xAndYIncrement.x;
-      });
-
-      mover.positionY += xAndYIncrement.y;
-      Utilities.doItemCollision(mover, obstacles, () => {
         mover.positionY -= xAndYIncrement.y;
       });
     }
 
     //Play area edge checks
-    if ((mover.positionX + mover.sizeX) > Constants.PLAY_AREA_SIZE_X) {
+    if ((mover.positionX + 1) > Constants.PLAY_AREA_SIZE_X) {
       if (onCollisionAction === OnCollisionAction.Destroy) {
         mover.isDestroyed = true;
       } else if (onCollisionAction === OnCollisionAction.Stop) {
-        mover.positionX = Constants.PLAY_AREA_SIZE_X - mover.sizeX;
+        mover.positionX = Constants.PLAY_AREA_SIZE_X - 1;
       }
     } else if (mover.positionX < 0) {
       if (onCollisionAction === OnCollisionAction.Destroy) {
@@ -117,11 +145,11 @@ export class Utilities {
         mover.positionX = 0;
       }
     }
-    if ((mover.positionY + mover.sizeY) > Constants.PLAY_AREA_SIZE_Y) {
+    if ((mover.positionY + 1) > Constants.PLAY_AREA_SIZE_Y) {
       if (onCollisionAction === OnCollisionAction.Destroy) {
         mover.isDestroyed = true;
       } else if (onCollisionAction === OnCollisionAction.Stop) {
-        mover.positionY = Constants.PLAY_AREA_SIZE_Y - mover.sizeY;
+        mover.positionY = Constants.PLAY_AREA_SIZE_Y - 1;
       }
     } else if (mover.positionY < 0) {
       if (onCollisionAction === OnCollisionAction.Destroy) {

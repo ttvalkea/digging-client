@@ -5,8 +5,6 @@ export class ItemBase {
   positionX: number;
   positionY: number;
   direction: number;
-  sizeX: number;
-  sizeY: number;
-  move: Function = Utilities.angledMoveFunction;
+  move: Function = Utilities.fourDirectionMoveFunction;
 };
 
