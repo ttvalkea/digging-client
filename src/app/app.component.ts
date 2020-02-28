@@ -49,12 +49,14 @@ export class AppComponent implements OnInit {
 
     this.signalRService.addBroadcastConnectionAmountDataListener(this.broadcastPlayerData);
     this.signalRService.addBroadcastPlayerDataMessageListener();
+    this.signalRService.addBroadcastGetObstaclesListener();
     this.signalRService.addBroadcastFireballDataMessageListener(this.clientPlayer);
     this.signalRService.addBroadcastFireballHitPlayerMessageListener(this.clientPlayer);
-    this.signalRService.addBroadcastGetObstaclesListener(this.setStartingPosition);
     this.signalRService.addBroadcastGetEmptySpacesListener();
     this.signalRService.addBroadcastPlayerWinsListener();
     this.signalRService.addBroadcastDigMessageListener();
+
+    this.signalRService.addBroadcastMapInfoListener(this.setStartingPosition)
 
     this.startHttpRequest();
 

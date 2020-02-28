@@ -10,6 +10,7 @@ import { FireballHitPlayerData } from '../models/FireballHitPlayerData.model';
 import { Utilities } from '../utils/utilities';
 import { TerrainInfo } from '../models/TerrainInfo.model';
 import { Coordinate } from '../models/Coordinate.model';
+import { MapInfo } from '../models/MapInfo.model';
 
 @Injectable({
   providedIn: 'root'
@@ -39,9 +40,24 @@ export class SignalRService {
 
   private actionsAfterSignalRConnectionStarted = () => {
     console.log('SignalR connection formed.');
+    this.broadcastMapInfo(false);
+  }
 
-    this.broadcastGetObstacles(false);
-    this.broadcastGetEmptySpaces();
+  public broadcastMapInfo = (generateNewMap: boolean) => {
+    this.hubConnection.invoke('broadcastMapInfo', generateNewMap)
+    .catch(err => console.error(err));
+  }
+
+  public addBroadcastMapInfoListener = (postMapInfoSettingFunction: Function) => {
+    this.hubConnection.on('broadcastMapInfo', (data: MapInfo) => {
+      this.setMapInfo(data);
+      postMapInfoSettingFunction();
+    })
+  }
+
+  private setMapInfo(mapInfo: MapInfo) {
+    this.obstacles = mapInfo.obstacles;
+    this.emptySpaces = mapInfo.emptySpaces;
   }
 
   public addBroadcastConnectionAmountDataListener = (playerInfoFunction: Function) => {
@@ -132,10 +148,9 @@ export class SignalRService {
     .catch(err => console.error(err));
   }
 
-  public addBroadcastGetObstaclesListener = (functionAfterSettingObstacles: Function) => {
+  public addBroadcastGetObstaclesListener = () => {
     this.hubConnection.on('broadcastGetObstacles', (obstacles: Obstacle[]) => {
       this.obstacles = obstacles;
-      functionAfterSettingObstacles();
     })
   }
 
