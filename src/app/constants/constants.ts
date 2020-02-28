@@ -6,7 +6,6 @@ export class Constants {
   public static PLAYER_STARTING_MANA: number = 100;
   public static PLAYER_ROTATE_ANGLE_AMOUNT: number = 90;
   public static PLAYER_MANA_REGENERATION_INTERVAL: number = 100;
-  public static PLAYER_SCORE_GETTING_INTERVAL: number = 1000;
   public static PLAYER_KNOCKOUT_DURATION_MS: number = 5000;
 
   public static PLAY_AREA_SIZE_X: number = 40;
@@ -16,9 +15,8 @@ export class Constants {
   public static VIEW_AREA_SIZE: number = Constants.VIEW_RADIUS * 2 + 1;
 
   public static FIREBALL_MOVEMENT_INTERVAL: number = 60;
-  public static FIREBALL_MANA_COST: number = 15;
+  public static FIREBALL_MANA_COST: number = 50;
 
-  public static SCORE_NEEDED_TO_WIN: number = 60;
-
-
+  public static DIGGING_MANA_COST: number = 1; //TODO: Increase for actual play
+  public static SCORE_NEEDED_TO_WIN: number = 100;
 }

@@ -1,8 +1,9 @@
 import { ItemBase } from './ItemBase.model';
 
 export class Obstacle extends ItemBase {
+  isVisible: boolean;
 
-  constructor(id: string, positionX: number, positionY: number, direction: number) {
+  constructor(id: string, positionX: number, positionY: number, direction: number, isVisible: boolean = false) {
 
     super();
 
@@ -10,5 +11,6 @@ export class Obstacle extends ItemBase {
     this.positionX = positionX;
     this.positionY = positionY;
     this.direction = direction;
+    this.isVisible = isVisible;
   }
 };

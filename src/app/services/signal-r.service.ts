@@ -8,9 +8,8 @@ import { OnCollisionAction, TerrainType } from '../enums/enums';
 import { ItemBase } from '../models/ItemBase.model';
 import { FireballHitPlayerData } from '../models/FireballHitPlayerData.model';
 import { Utilities } from '../utils/utilities';
-import { NewTagItem } from '../models/NewTagItem.model';
 import { TerrainInfo } from '../models/TerrainInfo.model';
-import { Coordinate } from '../models/Coordinate';
+import { Coordinate } from '../models/Coordinate.model';
 
 @Injectable({
   providedIn: 'root'
@@ -22,8 +21,6 @@ export class SignalRService {
   public players: Player[] = [];
   public fireballs: Fireball[] = [];
   public obstacles: Obstacle[] = [];
-  public tagPlayerId: string; //Id of the player who is currently gaining victory points.
-  public tagItem: NewTagItem;
   public winner: Player;
   public emptySpaces: Coordinate[] = [];
 
@@ -43,10 +40,8 @@ export class SignalRService {
   private actionsAfterSignalRConnectionStarted = () => {
     console.log('SignalR connection formed.');
 
-    //TODO: Make a getGameState function with all the initial loading.
-    //TODO: Add getWhoIsTag() there.
     this.broadcastGetObstacles(false);
-    this.broadcastNewTagItemData();
+    this.broadcastGetEmptySpaces();
   }
 
   public addBroadcastConnectionAmountDataListener = (playerInfoFunction: Function) => {
@@ -98,8 +93,10 @@ export class SignalRService {
 
   private getFireballWithPlayersCollisions = (fireball: Fireball) => {
     const playersOtherThanCaster = this.players.filter(player => player.id !== fireball.casterId);
-    Utilities.doItemCollision(fireball, playersOtherThanCaster, (collidedPlayer) => {
-      this.broadcastFireballHitPlayerMessage(fireball, collidedPlayer);
+    Utilities.doItemCollision(fireball, this.emptySpaces, playersOtherThanCaster, (collidedPlayer) => {
+      if (collidedPlayer) {
+        this.broadcastFireballHitPlayerMessage(fireball, collidedPlayer);
+      }
       fireball.isDestroyed = true;
     });
   }
@@ -113,7 +110,7 @@ export class SignalRService {
       //Fireball's movement
       const interval = setInterval(() => {
         if (!fireball.isDestroyed) {
-          fireball.move(fireball, fireball.direction, () => {}, OnCollisionAction.Destroy, this.obstacles);
+          fireball.move(fireball, fireball.direction, () => {}, OnCollisionAction.Destroy, this.emptySpaces, this.obstacles);
 
           //Only the player, who cast the fireball, makes collision checks and broadcasts them to everyone
           if (fireball.casterId === listeningPlayer.id) {
@@ -136,32 +133,21 @@ export class SignalRService {
   }
 
   public addBroadcastGetObstaclesListener = (functionAfterSettingObstacles: Function) => {
-    this.hubConnection.on('broadcastGetObstacles', (data: Coordinate[]) => {
-      this.obstacles = data.map(obstaclePosition => new Obstacle(null, obstaclePosition.x, obstaclePosition.y, 0));
+    this.hubConnection.on('broadcastGetObstacles', (obstacles: Obstacle[]) => {
+      this.obstacles = obstacles;
       functionAfterSettingObstacles();
     })
   }
 
-  public addNewTagListener = () => {
-    this.hubConnection.on('newTag', (newTagItem: NewTagItem) => {
-      this.tagItem = newTagItem;
-    })
-  }
-
-  public broadcastPlayerHitNewTagItem = (playerId: string) => {
-    this.hubConnection.invoke('broadcastPlayerHitNewTagItem', playerId)
+  public broadcastGetEmptySpaces = () => {
+    this.hubConnection.invoke('broadcastGetEmptySpaces')
     .catch(err => console.error(err));
   }
 
-  public addBroadcastPlayerBecomesTagListener = () => {
-    this.hubConnection.on('broadcastPlayerBecomesTag', (playerId: string) => {
-      this.tagPlayerId = playerId;
+  public addBroadcastGetEmptySpacesListener = () => {
+    this.hubConnection.on('broadcastGetEmptySpaces', (data: Coordinate[]) => {
+      this.emptySpaces = data;
     })
-  }
-
-  public broadcastNewTagItemData = () => {
-    this.hubConnection.invoke('broadcastNewTagItemData')
-    .catch(err => console.error(err));
   }
 
   public broadcastPlayerWins = (message: Player) => {
@@ -177,6 +163,8 @@ export class SignalRService {
 
   public getOtherPlayers = (playerId: string) => this.players.filter(player => player.id !== playerId);
 
+  public getVisibleObstacles = () => this.obstacles.filter(obstacle => obstacle.isVisible);
+
   public broadcastDigMessage = (positionX: number, positionY: number) => {
     this.hubConnection.invoke('broadcastDigMessage', positionX, positionY)
     .catch(err => console.error(err));
@@ -186,6 +174,9 @@ export class SignalRService {
     this.hubConnection.on('broadcastDigMessage', (terrainInfo: TerrainInfo) => {
       if (terrainInfo.terrainType === TerrainType.Empty && !this.emptySpaces.some(emptySpace => emptySpace.x === terrainInfo.coordinate.x && emptySpace.y === terrainInfo.coordinate.y)) {
         this.emptySpaces.push(new Coordinate(terrainInfo.coordinate.x, terrainInfo.coordinate.y));
+      } else if (terrainInfo.terrainType === TerrainType.Obstacle) {
+        // If the dug space has an obstacle, reveal that obstacle for the players
+        this.obstacles.find(obstacle => obstacle.positionX === terrainInfo.coordinate.x && obstacle.positionY === terrainInfo.coordinate.y).isVisible = true;
       }
     })
   }

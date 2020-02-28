@@ -4,7 +4,7 @@ import { OnCollisionAction } from '../enums/enums';
 import { Obstacle } from '../models/Obstacle.model';
 import { Constants } from '../constants/constants';
 import { Player } from '../models/Player.model';
-import { Coordinate } from '../models/Coordinate';
+import { Coordinate } from '../models/Coordinate.model';
 
 
 export class Utilities {
@@ -89,14 +89,14 @@ export class Utilities {
     return item1.positionX === item2.positionX && item1.positionY === item2.positionY;
   }
 
-  public static doItemCollision = (collidingItem: ItemBase, itemsToCollideWith: ItemBase[], actionOnCollision: Function) => {
-    for (let i = 0; i < itemsToCollideWith.filter(item => item.positionX === collidingItem.positionX && item.positionY === collidingItem.positionY).length; i++) {
-      actionOnCollision(itemsToCollideWith[i]);
+  public static doItemCollision = (collidingItem: ItemBase, openSpaces: Coordinate[], itemsToCollideWith: ItemBase[], actionOnCollision: Function) => {
+    if (itemsToCollideWith.some(item => collidingItem.positionX === item.positionX && collidingItem.positionY === item.positionY) || (!openSpaces.some(openSpace => collidingItem.positionX === openSpace.x && collidingItem.positionY === openSpace.y))) {
+      actionOnCollision(itemsToCollideWith.find(item => collidingItem.positionX === item.positionX && collidingItem.positionY === item.positionY));
       return;
     }
   }
 
-  public static fourDirectionMoveFunction = (mover, direction: number, postMovementAction: Function, onCollisionAction: OnCollisionAction = OnCollisionAction.Stop, obstacles: Obstacle[] = []) => {
+  public static fourDirectionMoveFunction = (mover, direction: number, postMovementAction: Function, onCollisionAction: OnCollisionAction = OnCollisionAction.Stop, emptySpaces: Coordinate[] = [], obstacles: Obstacle[] = []) => {
     mover.direction = direction;
     const xAndYIncrement = {
       x: 0,
@@ -121,11 +121,11 @@ export class Utilities {
     mover.positionX += xAndYIncrement.x;
     mover.positionY += xAndYIncrement.y;
     if (onCollisionAction === OnCollisionAction.Destroy) {
-      Utilities.doItemCollision(mover, obstacles, () => {
+      Utilities.doItemCollision(mover, emptySpaces, obstacles, () => {
         mover.isDestroyed = true;
       });
     } else if (onCollisionAction === OnCollisionAction.Stop) {
-      Utilities.doItemCollision(mover, obstacles, () => {
+      Utilities.doItemCollision(mover, emptySpaces, obstacles, () => {
         mover.positionX -= xAndYIncrement.x;
         mover.positionY -= xAndYIncrement.y;
       });

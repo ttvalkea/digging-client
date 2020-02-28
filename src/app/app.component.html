@@ -17,23 +17,6 @@
       }">
     </div>
   </div>
-  <!-- Active player -->
-  <div class="player" [ngStyle]="
-  {
-    'margin-top.px': constants.VIEW_RADIUS * constants.POSITION_TO_DISPLAY_MULTIPLAYER,
-    'margin-left.px': constants.VIEW_RADIUS * constants.POSITION_TO_DISPLAY_MULTIPLAYER,
-    'background': clientPlayer.hitPoints > 0 ? clientPlayer.playerColor : '#333',
-    'border': '1px solid ' + clientPlayer.playerColor,
-    'width.px': constants.POSITION_TO_DISPLAY_MULTIPLAYER - 5,
-    'height.px': constants.POSITION_TO_DISPLAY_MULTIPLAYER - 5
-  }">
-    <span [ngStyle]="
-      {
-        'transform': 'rotate(' + clientPlayer.direction + 'deg)'
-      }
-    ">--></span>
-    <span>{{clientPlayer.hitPoints}}hp</span>
-  </div>
   <!-- Other players -->
   <div *ngFor="let player of utilities.getItemsInPlayersView(clientPlayer, signalRService.getOtherPlayers(clientPlayer.id))">
     <div class="player" [ngStyle]="
@@ -60,7 +43,7 @@
     </div>
   </div>
   <!-- Obstacles -->
-  <div *ngFor="let obstacle of utilities.getItemsInPlayersView(clientPlayer, signalRService.obstacles)">
+  <div *ngFor="let obstacle of utilities.getItemsInPlayersView(clientPlayer, signalRService.getVisibleObstacles())">
     <div class="obstacle" [ngStyle]="
       {
         'margin-top.px': (utilities.getItemDisplayPositionY(clientPlayer, obstacle) + constants.VIEW_RADIUS) * constants.POSITION_TO_DISPLAY_MULTIPLAYER,
@@ -69,6 +52,23 @@
         'height.px': constants.POSITION_TO_DISPLAY_MULTIPLAYER
       }">
     </div>
+  </div>
+  <!-- Active player -->
+  <div class="player" [ngStyle]="
+  {
+    'margin-top.px': constants.VIEW_RADIUS * constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+    'margin-left.px': constants.VIEW_RADIUS * constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+    'background': clientPlayer.hitPoints > 0 ? clientPlayer.playerColor : '#555',
+    'border': '1px solid ' + clientPlayer.playerColor,
+    'width.px': constants.POSITION_TO_DISPLAY_MULTIPLAYER - 5,
+    'height.px': constants.POSITION_TO_DISPLAY_MULTIPLAYER - 5
+  }">
+    <span [ngStyle]="
+      {
+        'transform': 'rotate(' + clientPlayer.direction + 'deg)'
+      }
+    ">--></span>
+    <span>{{clientPlayer.hitPoints}}hp</span>
   </div>
   <!-- Play area's border obstacles -->
   <div *ngFor="let obstacle of utilities.getItemsInPlayersView(clientPlayer, playAreaBorderObstacles)">

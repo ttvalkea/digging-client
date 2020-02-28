@@ -51,9 +51,8 @@ export class AppComponent implements OnInit {
     this.signalRService.addBroadcastPlayerDataMessageListener();
     this.signalRService.addBroadcastFireballDataMessageListener(this.clientPlayer);
     this.signalRService.addBroadcastFireballHitPlayerMessageListener(this.clientPlayer);
-    this.signalRService.addBroadcastGetObstaclesListener(this.setStartingPosition);
-    this.signalRService.addNewTagListener();
-    this.signalRService.addBroadcastPlayerBecomesTagListener();
+    this.signalRService.addBroadcastGetObstaclesListener(() => {});//TODO: this.setStartingPosition);
+    this.signalRService.addBroadcastGetEmptySpacesListener();
     this.signalRService.addBroadcastPlayerWinsListener();
     this.signalRService.addBroadcastDigMessageListener();
 
@@ -64,17 +63,6 @@ export class AppComponent implements OnInit {
 
     //Player's mana regeneration
     setInterval(() => { if (this.manaAmount < Constants.PLAYER_STARTING_MANA) this.manaAmount++; }, Constants.PLAYER_MANA_REGENERATION_INTERVAL);
-
-    //Player's scoring interval
-    setInterval(() => {
-      if (this.signalRService.tagPlayerId && this.clientPlayer.id === this.signalRService.tagPlayerId && !this.signalRService.winner) {
-        this.clientPlayer.score++;
-        this.broadcastPlayerData();
-      }
-      if (this.clientPlayer.score >= Constants.SCORE_NEEDED_TO_WIN && !this.signalRService.winner) {
-        this.signalRService.broadcastPlayerWins(this.clientPlayer);
-      }
-    }, Constants.PLAYER_SCORE_GETTING_INTERVAL);
   }
 
   private startHttpRequest = () => {
@@ -99,22 +87,23 @@ export class AppComponent implements OnInit {
     return obstacles;
   }
 
-  public setStartingPosition = () => {
-    if (!this.hasPlayerStartingPositionBeenSet) {
-      let isPositionOk = false;
+  //TODO:
+  // public setStartingPosition = () => {
+  //   if (!this.hasPlayerStartingPositionBeenSet) {
+  //     let isPositionOk = false;
 
-      while (!isPositionOk) {
-        this.clientPlayer.positionX = Utilities.getRandomNumber(0, Constants.PLAY_AREA_SIZE_X - 1);
-        this.clientPlayer.positionY = Utilities.getRandomNumber(0, Constants.PLAY_AREA_SIZE_Y - 1);
-        isPositionOk = true;
-        Utilities.doItemCollision(this.clientPlayer, this.signalRService.obstacles, () => {
-          isPositionOk = false;
-        });
-      }
-      this.broadcastPlayerData();
-      this.hasPlayerStartingPositionBeenSet = true;
-    }
-  }
+  //     while (!isPositionOk) {
+  //       this.clientPlayer.positionX = Utilities.getRandomNumber(0, Constants.PLAY_AREA_SIZE_X - 1);
+  //       this.clientPlayer.positionY = Utilities.getRandomNumber(0, Constants.PLAY_AREA_SIZE_Y - 1);
+  //       isPositionOk = true;
+  //       Utilities.doItemCollision(this.clientPlayer, this.signalRService.obstacles, () => {
+  //         isPositionOk = false;
+  //       });
+  //     }
+  //     this.broadcastPlayerData();
+  //     this.hasPlayerStartingPositionBeenSet = true;
+  //   }
+  // }
 
   public broadcastPlayerData = () => {
     this.signalRService.broadcastPlayerDataMessage(this.clientPlayer);
@@ -167,12 +156,12 @@ export class AppComponent implements OnInit {
 
   go = () => {
     if (this.clientPlayer.hitPoints > 0 && !this.signalRService.winner) {
-      this.clientPlayer.move(this.clientPlayer, this.clientPlayer.direction, this.postMovementAction, OnCollisionAction.Stop, this.signalRService.obstacles);
+      this.clientPlayer.move(this.clientPlayer, this.clientPlayer.direction, this.postMovementAction, OnCollisionAction.Stop, this.signalRService.emptySpaces, this.signalRService.obstacles);
     }
   }
 
   dig = () => {
-    if (this.clientPlayer.hitPoints > 0 && !this.signalRService.winner) {
+    if (this.manaAmount > Constants.DIGGING_MANA_COST && this.clientPlayer.hitPoints > 0 && !this.signalRService.winner) {
       const xAndYIncrement = {
         x: 0,
         y: 0
@@ -193,18 +182,12 @@ export class AppComponent implements OnInit {
         default:
           throw "Unsupported direction: " + this.clientPlayer.direction;
       }
-      this.signalRService.broadcastDigMessage(this.clientPlayer.positionX + xAndYIncrement.x, this.clientPlayer.positionY + xAndYIncrement.y)
+      this.signalRService.broadcastDigMessage(this.clientPlayer.positionX + xAndYIncrement.x, this.clientPlayer.positionY + xAndYIncrement.y);
+      this.manaAmount -= Constants.DIGGING_MANA_COST;
     }
   }
 
   postMovementAction = () => {
-    this.checkForCollisionWithNewTagItem();
     this.broadcastPlayerData();
-  }
-
-  checkForCollisionWithNewTagItem = () => {
-    if (this.signalRService.tagItem && this.signalRService.tagItem.isInPlay) {
-      Utilities.doItemCollision(this.clientPlayer, [this.signalRService.tagItem], () => { this.signalRService.broadcastPlayerHitNewTagItem(this.clientPlayer.id); });
-    }
   }
 }
