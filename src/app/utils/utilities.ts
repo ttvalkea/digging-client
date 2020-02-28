@@ -83,7 +83,7 @@ export class Utilities {
     return prefix + Date.now() + Utilities.getRandomNumber(0, 1000).toString();
   }
 
-  public static getRandomNumber = (min: number, max: number) => Math.floor((Math.random() * max) + min);
+  public static getRandomNumber = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min);
 
   public static areItemsColliding = (item1: ItemBase, item2: ItemBase) => {
     return item1.positionX === item2.positionX && item1.positionY === item2.positionY;
