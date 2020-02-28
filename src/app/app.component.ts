@@ -51,7 +51,7 @@ export class AppComponent implements OnInit {
     this.signalRService.addBroadcastPlayerDataMessageListener();
     this.signalRService.addBroadcastFireballDataMessageListener(this.clientPlayer);
     this.signalRService.addBroadcastFireballHitPlayerMessageListener(this.clientPlayer);
-    this.signalRService.addBroadcastGetObstaclesListener(() => {});//TODO: this.setStartingPosition);
+    this.signalRService.addBroadcastGetObstaclesListener(this.setStartingPosition);
     this.signalRService.addBroadcastGetEmptySpacesListener();
     this.signalRService.addBroadcastPlayerWinsListener();
     this.signalRService.addBroadcastDigMessageListener();
@@ -87,23 +87,53 @@ export class AppComponent implements OnInit {
     return obstacles;
   }
 
-  //TODO:
-  // public setStartingPosition = () => {
-  //   if (!this.hasPlayerStartingPositionBeenSet) {
-  //     let isPositionOk = false;
+  public setStartingPosition = () => {
+    if (!this.hasPlayerStartingPositionBeenSet) {
+      //Randomly spawn into any of the four corners but not into one where another player is already in
+      let isPositionOk: boolean = false;
+      let corner: number = Utilities.getRandomNumber(0, 3);
+      let cornersAttempted: number = 0;
+      while (!isPositionOk && cornersAttempted < 4) {
+        switch (corner) {
+          case 0: //Top left
+            this.clientPlayer.positionX = 1;
+            this.clientPlayer.positionY = 1;
+            break;
+          case 1: //Top right
+            this.clientPlayer.positionX = Constants.PLAY_AREA_SIZE_X-2;
+            this.clientPlayer.positionY = 1;
+            break;
+          case 2: //Bottom right
+            this.clientPlayer.positionX = Constants.PLAY_AREA_SIZE_X-2;
+            this.clientPlayer.positionY = Constants.PLAY_AREA_SIZE_Y-2;
+            break;
+          case 3: //Bottom left
+            this.clientPlayer.positionX = 1
+            this.clientPlayer.positionY = Constants.PLAY_AREA_SIZE_Y-2;
+            break;
+        }
+        //No other player in this position
+        if (!this.signalRService.players.some(player => player.id !== this.clientPlayer.id && player.positionX === this.clientPlayer.positionX && player.positionY === this.clientPlayer.positionY)) {
+          isPositionOk = true;
+        } else {
+          cornersAttempted++;
+          corner = (corner+1)%4;
+        }
+      }
+      //All four corners are in use. Spawn in a completely random position
+      if (!isPositionOk) {
+        this.clientPlayer.positionX = Utilities.getRandomNumber(0, Constants.PLAY_AREA_SIZE_X - 1);
+        this.clientPlayer.positionY = Utilities.getRandomNumber(0, Constants.PLAY_AREA_SIZE_Y - 1);
+        isPositionOk = true;
+      }
 
-  //     while (!isPositionOk) {
-  //       this.clientPlayer.positionX = Utilities.getRandomNumber(0, Constants.PLAY_AREA_SIZE_X - 1);
-  //       this.clientPlayer.positionY = Utilities.getRandomNumber(0, Constants.PLAY_AREA_SIZE_Y - 1);
-  //       isPositionOk = true;
-  //       Utilities.doItemCollision(this.clientPlayer, this.signalRService.obstacles, () => {
-  //         isPositionOk = false;
-  //       });
-  //     }
-  //     this.broadcastPlayerData();
-  //     this.hasPlayerStartingPositionBeenSet = true;
-  //   }
-  // }
+      //Create an empty space underneath the player
+      this.signalRService.broadcastDigMessage(this.clientPlayer.positionX, this.clientPlayer.positionY);
+
+      this.broadcastPlayerData();
+      this.hasPlayerStartingPositionBeenSet = true;
+    }
+  }
 
   public broadcastPlayerData = () => {
     this.signalRService.broadcastPlayerDataMessage(this.clientPlayer);
