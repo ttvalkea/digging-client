@@ -11,6 +11,7 @@ import { Utilities } from '../utils/utilities';
 import { TerrainInfo } from '../models/TerrainInfo.model';
 import { Coordinate } from '../models/Coordinate.model';
 import { MapInfo } from '../models/MapInfo.model';
+import { SoilInfo } from '../models/SoilInfo';
 
 @Injectable({
   providedIn: 'root'
@@ -22,8 +23,9 @@ export class SignalRService {
   public players: Player[] = [];
   public fireballs: Fireball[] = [];
   public obstacles: Obstacle[] = [];
-  public winner: Player;
+  public soilTiles: SoilInfo[] = [];
   public emptySpaces: Coordinate[] = [];
+  public winner: Player;
 
   public startConnection = () => {
     const isProductionEnvironment = environment.production;
@@ -43,8 +45,8 @@ export class SignalRService {
     this.broadcastMapInfo(false);
   }
 
-  public broadcastMapInfo = (generateNewMap: boolean) => {
-    this.hubConnection.invoke('broadcastMapInfo', generateNewMap)
+  public broadcastMapInfo = (generateNewMap: boolean, mapSizeX: number = null, mapSizeY: number = null, obstacleAmountMin: number = null, obstacleAmountMax: number = null, soilAmountMin: number = null, soilAmountMax: number = null) => {
+    this.hubConnection.invoke('broadcastMapInfo', generateNewMap, mapSizeX, mapSizeY, obstacleAmountMin, obstacleAmountMax, soilAmountMin, soilAmountMax)
     .catch(err => console.error(err));
   }
 
@@ -58,6 +60,9 @@ export class SignalRService {
   private setMapInfo(mapInfo: MapInfo) {
     this.obstacles = mapInfo.obstacles;
     this.emptySpaces = mapInfo.emptySpaces;
+    this.soilTiles = mapInfo.soilTiles;
+
+    console.log(this.obstacles, this.soilTiles)
   }
 
   public addBroadcastConnectionAmountDataListener = (playerInfoFunction: Function) => {
@@ -143,11 +148,6 @@ export class SignalRService {
     })
   }
 
-  public broadcastGetObstacles = (generateNewObstacles: boolean) => {
-    this.hubConnection.invoke('broadcastGetObstacles', generateNewObstacles)
-    .catch(err => console.error(err));
-  }
-
   public addBroadcastGetObstaclesListener = () => {
     this.hubConnection.on('broadcastGetObstacles', (obstacles: Obstacle[]) => {
       this.obstacles = obstacles;
@@ -193,6 +193,17 @@ export class SignalRService {
         // If the dug space has an obstacle, reveal that obstacle for the players
         this.obstacles.find(obstacle => obstacle.positionX === terrainInfo.coordinate.x && obstacle.positionY === terrainInfo.coordinate.y).isVisible = true;
       }
+    })
+  }
+
+  public getTileSoilLevelAndFruitStatus = (coordinate: Coordinate) => {
+    const soilTile = this.soilTiles.find(soilTile => soilTile.coordinate.x === coordinate.x && soilTile.coordinate.y === coordinate.y);
+    return soilTile ? { soilLevel: soilTile.soilLevel, hasFruit: soilTile.hasFruit } : { soilLevel: 0, hasFruit: false };
+  }
+
+  public addFruitInfoListener = () => {
+    this.hubConnection.on('fruitInfo', (soilTiles: SoilInfo[]) => {
+      this.soilTiles = soilTiles;
     })
   }
 }

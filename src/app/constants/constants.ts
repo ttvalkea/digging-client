@@ -11,6 +11,8 @@ export class Constants {
   public static PLAY_AREA_SIZE_X: number = 40;
   public static PLAY_AREA_SIZE_Y: number = 40;
 
+  public static STARTING_POSITION_OFFSET_FROM_THE_CORNER: number = 2;
+
   public static VIEW_RADIUS: number = 5;
   public static VIEW_AREA_SIZE: number = Constants.VIEW_RADIUS * 2 + 1;
 
@@ -19,4 +21,9 @@ export class Constants {
 
   public static DIGGING_MANA_COST: number = 1; //TODO: Increase for actual play
   public static SCORE_NEEDED_TO_WIN: number = 100;
+
+  public static OBSTACLE_AMOUNT_MIN: number = 500;
+  public static OBSTACLE_AMOUNT_MAX: number = 550;
+  public static SOIL_TILE_AMOUNT_MIN: number = 300;
+  public static SOIL_TILE_AMOUNT_MAX: number = 330;
 }

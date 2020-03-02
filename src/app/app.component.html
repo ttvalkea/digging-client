@@ -15,6 +15,20 @@
         'width.px': constants.POSITION_TO_DISPLAY_MULTIPLAYER,
         'height.px': constants.POSITION_TO_DISPLAY_MULTIPLAYER
       }">
+      <div *ngIf="signalRService.getTileSoilLevelAndFruitStatus(emptySpace).hasFruit; else noFruit">
+        <div [ngSwitch]="signalRService.getTileSoilLevelAndFruitStatus(emptySpace).soilLevel">
+          <img *ngSwitchCase="1" src="{{'assets/images/soil1withfruit.png'}}" alt="{{'badPicUrl'}}" />
+          <img *ngSwitchCase="2" src="{{'assets/images/soil2withfruit.png'}}" alt="{{'badPicUrl'}}" />
+          <img *ngSwitchCase="3" src="{{'assets/images/soil3withfruit.png'}}" alt="{{'badPicUrl'}}" />
+        </div>
+      </div>
+      <ng-template #noFruit>
+        <div [ngSwitch]="signalRService.getTileSoilLevelAndFruitStatus(emptySpace).soilLevel">
+          <img *ngSwitchCase="1" src="{{'assets/images/soil1.png'}}" alt="{{'badPicUrl'}}" />
+          <img *ngSwitchCase="2" src="{{'assets/images/soil2.png'}}" alt="{{'badPicUrl'}}" />
+          <img *ngSwitchCase="3" src="{{'assets/images/soil3.png'}}" alt="{{'badPicUrl'}}" />
+        </div>
+      </ng-template>
     </div>
   </div>
   <!-- Other players -->
@@ -130,5 +144,5 @@
     'width.px': constants.VIEW_AREA_SIZE * constants.POSITION_TO_DISPLAY_MULTIPLAYER,
     'height.px': 30
   }">
-  <button (click)="signalRService.broadcastGetObstacles(true)">Generate obstacles</button>
+  <button (click)="signalRService.broadcastMapInfo(true, constants.PLAY_AREA_SIZE_X, constants.PLAY_AREA_SIZE_Y, constants.OBSTACLE_AMOUNT_MIN, constants.OBSTACLE_AMOUNT_MAX, constants.SOIL_TILE_AMOUNT_MIN, constants.SOIL_TILE_AMOUNT_MAX)">Generate obstacles</button>
 </div>

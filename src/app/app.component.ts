@@ -55,6 +55,7 @@ export class AppComponent implements OnInit {
     this.signalRService.addBroadcastGetEmptySpacesListener();
     this.signalRService.addBroadcastPlayerWinsListener();
     this.signalRService.addBroadcastDigMessageListener();
+    this.signalRService.addFruitInfoListener();
 
     this.signalRService.addBroadcastMapInfoListener(this.setStartingPosition)
 
@@ -98,20 +99,20 @@ export class AppComponent implements OnInit {
       while (!isPositionOk && cornersAttempted < 4) {
         switch (corner) {
           case 0: //Top left
-            this.clientPlayer.positionX = 1;
-            this.clientPlayer.positionY = 1;
+            this.clientPlayer.positionX = Constants.STARTING_POSITION_OFFSET_FROM_THE_CORNER;
+            this.clientPlayer.positionY = Constants.STARTING_POSITION_OFFSET_FROM_THE_CORNER;
             break;
           case 1: //Top right
-            this.clientPlayer.positionX = Constants.PLAY_AREA_SIZE_X-2;
-            this.clientPlayer.positionY = 1;
+            this.clientPlayer.positionX = Constants.PLAY_AREA_SIZE_X-Constants.STARTING_POSITION_OFFSET_FROM_THE_CORNER-1;
+            this.clientPlayer.positionY = Constants.STARTING_POSITION_OFFSET_FROM_THE_CORNER;
             break;
           case 2: //Bottom right
-            this.clientPlayer.positionX = Constants.PLAY_AREA_SIZE_X-2;
-            this.clientPlayer.positionY = Constants.PLAY_AREA_SIZE_Y-2;
+            this.clientPlayer.positionX = Constants.PLAY_AREA_SIZE_X-Constants.STARTING_POSITION_OFFSET_FROM_THE_CORNER-1;
+            this.clientPlayer.positionY = Constants.PLAY_AREA_SIZE_Y-Constants.STARTING_POSITION_OFFSET_FROM_THE_CORNER-1;
             break;
           case 3: //Bottom left
-            this.clientPlayer.positionX = 1
-            this.clientPlayer.positionY = Constants.PLAY_AREA_SIZE_Y-2;
+            this.clientPlayer.positionX = Constants.STARTING_POSITION_OFFSET_FROM_THE_CORNER
+            this.clientPlayer.positionY = Constants.PLAY_AREA_SIZE_Y-Constants.STARTING_POSITION_OFFSET_FROM_THE_CORNER-1;
             break;
         }
         //No other player in this position
