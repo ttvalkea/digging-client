@@ -1,12 +1,17 @@
-import { ItemBase } from './ItemBase.model';
 import { Constants } from '../constants/constants';
+import { Utilities } from '../utils/utilities';
 
-export class Player extends ItemBase {
+export class Player implements HasPosition {
+  positionX: number;
+  positionY: number;
   playerName: string;
   playerColor: string;
   hitPoints: number;
   takeDamage: Function = takeDamage;
   score: number;
+  id: string;
+  direction: number;
+  move: Function = Utilities.fourDirectionMoveFunction;
 };
 
 const takeDamage = (player: Player, amount: number, broadcastPlayerDataFunction: Function) => {

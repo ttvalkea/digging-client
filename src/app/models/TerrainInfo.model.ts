@@ -1,7 +1,7 @@
 import { TerrainType } from '../enums/enums';
-import { Coordinate } from './Coordinate.model';
 
-export class TerrainInfo {
+export class TerrainInfo implements HasPosition {
+  positionX: number;
+  positionY: number;
   terrainType: TerrainType;
-  coordinate: Coordinate;
 };

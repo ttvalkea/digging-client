@@ -1,41 +1,25 @@
 
-import { ItemBase } from '../models/ItemBase.model';
 import { OnCollisionAction } from '../enums/enums';
 import { Obstacle } from '../models/Obstacle.model';
 import { Constants } from '../constants/constants';
 import { Player } from '../models/Player.model';
-import { Coordinate } from '../models/Coordinate.model';
 
 
 export class Utilities {
 
-  public static getItemDisplayPositionX = (player: Player, item: ItemBase) => {
+  public static getItemDisplayPositionX = (player: Player, item: HasPosition) => {
     return item.positionX - player.positionX;
   }
 
-  public static getItemDisplayPositionY = (player: Player, item: ItemBase) => {
+  public static getItemDisplayPositionY = (player: Player, item: HasPosition) => {
     return item.positionY - player.positionY;
   }
 
-  public static getCoordinateDisplayPositionX = (player: Player, item: Coordinate) => {
-    return item.x - player.positionX;
-  }
-
-  public static getCoordinateDisplayPositionY = (player: Player, item: Coordinate) => {
-    return item.y - player.positionY;
-  }
-
-  public static isItemInPlayersView = (player: Player, item: ItemBase) => {
+  public static isItemInPlayersView = (player: Player, item: HasPosition) => {
     return Math.abs(item.positionX - player.positionX) <= Constants.VIEW_RADIUS && Math.abs(item.positionY - player.positionY) <= Constants.VIEW_RADIUS;
   }
 
-  public static getItemsInPlayersView = (player: Player, items: ItemBase[]) => items.filter(item => Utilities.isItemInPlayersView(player, item));
-
-  public static isCoordinateInPlayersView = (player: Player, item: Coordinate) => {
-    return Math.abs(item.x - player.positionX) <= Constants.VIEW_RADIUS && Math.abs(item.y - player.positionY) <= Constants.VIEW_RADIUS;
-  }
-
-  public static getCoordinatesInPlayersView = (player: Player, items: Coordinate[]) => items.filter(item => Utilities.isCoordinateInPlayersView(player, item));
+  public static getItemsInPlayersView = (player: Player, items: HasPosition[]) => items.filter(item => Utilities.isItemInPlayersView(player, item));
 
   public static getRandomPlayerColor = () => {
     const colorNumber = Utilities.getRandomNumber(1, 18);
@@ -85,18 +69,18 @@ export class Utilities {
 
   public static getRandomNumber = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min);
 
-  public static areItemsColliding = (item1: ItemBase, item2: ItemBase) => {
+  public static areItemsColliding = (item1: HasPosition, item2: HasPosition) => {
     return item1.positionX === item2.positionX && item1.positionY === item2.positionY;
   }
 
-  public static doItemCollision = (collidingItem: ItemBase, openSpaces: Coordinate[], itemsToCollideWith: ItemBase[], actionOnCollision: Function) => {
-    if (itemsToCollideWith.some(item => collidingItem.positionX === item.positionX && collidingItem.positionY === item.positionY) || (!openSpaces.some(openSpace => collidingItem.positionX === openSpace.x && collidingItem.positionY === openSpace.y))) {
+  public static doItemCollision = (collidingItem: HasPosition, openSpaces: HasPosition[], itemsToCollideWith: HasPosition[], actionOnCollision: Function) => {
+    if (itemsToCollideWith.some(item => collidingItem.positionX === item.positionX && collidingItem.positionY === item.positionY) || (!openSpaces.some(openSpace => collidingItem.positionX === openSpace.positionX && collidingItem.positionY === openSpace.positionY))) {
       actionOnCollision(itemsToCollideWith.find(item => collidingItem.positionX === item.positionX && collidingItem.positionY === item.positionY));
       return;
     }
   }
 
-  public static fourDirectionMoveFunction = (mover, direction: number, postMovementAction: Function, onCollisionAction: OnCollisionAction = OnCollisionAction.Stop, emptySpaces: Coordinate[] = [], obstacles: Obstacle[] = []) => {
+  public static fourDirectionMoveFunction = (mover, direction: number, postMovementAction: Function, onCollisionAction: OnCollisionAction = OnCollisionAction.Stop, emptySpaces: HasPosition[] = [], obstacles: Obstacle[] = []) => {
     mover.direction = direction;
     const xAndYIncrement = {
       x: 0,

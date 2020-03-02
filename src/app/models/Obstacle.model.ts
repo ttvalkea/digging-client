@@ -1,16 +1,11 @@
-import { ItemBase } from './ItemBase.model';
-
-export class Obstacle extends ItemBase {
+export class Obstacle implements HasPosition {
+  positionX: number;
+  positionY: number;
   isVisible: boolean;
 
-  constructor(id: string, positionX: number, positionY: number, direction: number, isVisible: boolean = false) {
-
-    super();
-
-    this.id = id;
+  constructor(positionX: number, positionY: number, isVisible: boolean = false) {
     this.positionX = positionX;
     this.positionY = positionY;
-    this.direction = direction;
     this.isVisible = isVisible;
   }
 };

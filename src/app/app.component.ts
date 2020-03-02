@@ -80,12 +80,12 @@ export class AppComponent implements OnInit {
   private getPlayAreaBorderObstacles = () => {
     const obstacles = [];
     for (let i=0; i<Constants.PLAY_AREA_SIZE_X+2; i++) {
-      obstacles.push(new Obstacle('', i-1, -1, 0));
-      obstacles.push(new Obstacle('', i-1, Constants.PLAY_AREA_SIZE_Y, 0));
+      obstacles.push(new Obstacle(i-1, -1));
+      obstacles.push(new Obstacle(i-1, Constants.PLAY_AREA_SIZE_Y));
     }
     for (let i=0; i<Constants.PLAY_AREA_SIZE_Y+2; i++) {
-      obstacles.push(new Obstacle('', -1, i-1, 0));
-      obstacles.push(new Obstacle('', Constants.PLAY_AREA_SIZE_X, i-1, 0));
+      obstacles.push(new Obstacle(-1, i-1));
+      obstacles.push(new Obstacle(Constants.PLAY_AREA_SIZE_X, i-1));
     }
     return obstacles;
   }

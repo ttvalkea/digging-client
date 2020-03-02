@@ -5,13 +5,12 @@ import { Player } from '../models/Player.model';
 import { Fireball } from '../models/Fireball.model';
 import { Obstacle } from '../models/Obstacle.model';
 import { OnCollisionAction, TerrainType } from '../enums/enums';
-import { ItemBase } from '../models/ItemBase.model';
 import { FireballHitPlayerData } from '../models/FireballHitPlayerData.model';
 import { Utilities } from '../utils/utilities';
 import { TerrainInfo } from '../models/TerrainInfo.model';
-import { Coordinate } from '../models/Coordinate.model';
 import { MapInfo } from '../models/MapInfo.model';
-import { SoilInfo } from '../models/SoilInfo';
+import { SoilInfo } from '../models/SoilInfo.model';
+import { Coordinate } from '../models/Coordinate.model';
 
 @Injectable({
   providedIn: 'root'
@@ -126,7 +125,7 @@ export class SignalRService {
     this.hubConnection.on('broadcastFireballDataMessage', (fireball: Fireball) => {
 
       //Server can't return the move function, so it's reassigned here
-      fireball.move = new ItemBase().move;
+      fireball.move = Utilities.fourDirectionMoveFunction;
       this.fireballs.push(fireball);
       //Fireball's movement
       const interval = setInterval(() => {
@@ -160,7 +159,7 @@ export class SignalRService {
   }
 
   public addBroadcastGetEmptySpacesListener = () => {
-    this.hubConnection.on('broadcastGetEmptySpaces', (data: Coordinate[]) => {
+    this.hubConnection.on('broadcastGetEmptySpaces', (data: HasPosition[]) => {
       this.emptySpaces = data;
     })
   }
@@ -187,17 +186,17 @@ export class SignalRService {
 
   public addBroadcastDigMessageListener = () => {
     this.hubConnection.on('broadcastDigMessage', (terrainInfo: TerrainInfo) => {
-      if (terrainInfo.terrainType === TerrainType.Empty && !this.emptySpaces.some(emptySpace => emptySpace.x === terrainInfo.coordinate.x && emptySpace.y === terrainInfo.coordinate.y)) {
-        this.emptySpaces.push(new Coordinate(terrainInfo.coordinate.x, terrainInfo.coordinate.y));
+      if (terrainInfo.terrainType === TerrainType.Empty && !this.emptySpaces.some(emptySpace => emptySpace.positionX === terrainInfo.positionX && emptySpace.positionY === terrainInfo.positionY)) {
+        this.emptySpaces.push(new Coordinate(terrainInfo.positionX, terrainInfo.positionY));
       } else if (terrainInfo.terrainType === TerrainType.Obstacle) {
         // If the dug space has an obstacle, reveal that obstacle for the players
-        this.obstacles.find(obstacle => obstacle.positionX === terrainInfo.coordinate.x && obstacle.positionY === terrainInfo.coordinate.y).isVisible = true;
+        this.obstacles.find(obstacle => obstacle.positionX === terrainInfo.positionX && obstacle.positionY === terrainInfo.positionY).isVisible = true;
       }
     })
   }
 
   public getTileSoilLevelAndFruitStatus = (coordinate: Coordinate) => {
-    const soilTile = this.soilTiles.find(soilTile => soilTile.coordinate.x === coordinate.x && soilTile.coordinate.y === coordinate.y);
+    const soilTile = this.soilTiles.find(soilTile => soilTile.positionX === coordinate.positionX && soilTile.positionY === coordinate.positionY);
     return soilTile ? { soilLevel: soilTile.soilLevel, hasFruit: soilTile.hasFruit } : { soilLevel: 0, hasFruit: false };
   }
 

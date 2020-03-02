@@ -1,9 +1,10 @@
-export class Coordinate {
-  x: number;
-  y: number;
+export class Coordinate implements HasPosition {
+  positionX: number;
+  positionY: number;
+
 
   constructor(positionX: number, positionY: number) {
-    this.x = positionX;
-    this.y = positionY;
+    this.positionX = positionX;
+    this.positionY = positionY;
   }
 };

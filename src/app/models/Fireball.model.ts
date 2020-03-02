@@ -1,14 +1,16 @@
-import { ItemBase } from './ItemBase.model';
+import { Utilities } from '../utils/utilities';
 
-export class Fireball extends ItemBase {
+export class Fireball implements HasPosition {
+  positionX: number;
+  positionY: number;
   casterId: string;
   moveIntervalMs: number;
   isDestroyed: Boolean = false;
+  id: string;
+  direction: number;
+  move: Function = Utilities.fourDirectionMoveFunction;
 
   constructor(id: string, casterId: string, positionX: number, positionY: number, direction: number, moveIntervalMs: number) {
-
-    super();
-
     this.id = id;
     this.casterId = casterId;
     this.positionX = positionX;

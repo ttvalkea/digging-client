@@ -1,8 +1,8 @@
 import { SoilLevel } from '../enums/enums';
-import { Coordinate } from './Coordinate.model';
 
-export class SoilInfo {
+export class SoilInfo implements HasPosition {
+  positionX: number;
+  positionY: number;
   soilLevel: SoilLevel;
-  coordinate: Coordinate;
   hasFruit: boolean = false;
 };

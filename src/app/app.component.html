@@ -7,11 +7,11 @@
     'height.px': constants.VIEW_AREA_SIZE * constants.POSITION_TO_DISPLAY_MULTIPLAYER
   }">
   <!-- Empty spaces -->
-  <div *ngFor="let emptySpace of utilities.getCoordinatesInPlayersView(clientPlayer, signalRService.emptySpaces)">
+  <div *ngFor="let emptySpace of utilities.getItemsInPlayersView(clientPlayer, signalRService.emptySpaces)">
     <div class="empty-space" [ngStyle]="
       {
-        'margin-top.px': (utilities.getCoordinateDisplayPositionY(clientPlayer, emptySpace) + constants.VIEW_RADIUS) * constants.POSITION_TO_DISPLAY_MULTIPLAYER,
-        'margin-left.px': (utilities.getCoordinateDisplayPositionX(clientPlayer, emptySpace) + constants.VIEW_RADIUS) * constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'margin-top.px': (utilities.getItemDisplayPositionY(clientPlayer, emptySpace) + constants.VIEW_RADIUS) * constants.POSITION_TO_DISPLAY_MULTIPLAYER,
+        'margin-left.px': (utilities.getItemDisplayPositionX(clientPlayer, emptySpace) + constants.VIEW_RADIUS) * constants.POSITION_TO_DISPLAY_MULTIPLAYER,
         'width.px': constants.POSITION_TO_DISPLAY_MULTIPLAYER,
         'height.px': constants.POSITION_TO_DISPLAY_MULTIPLAYER
       }">
