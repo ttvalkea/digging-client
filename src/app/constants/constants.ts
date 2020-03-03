@@ -22,8 +22,8 @@ export class Constants {
   public static DIGGING_MANA_COST: number = 1; //TODO: Increase for actual play
   public static SCORE_NEEDED_TO_WIN: number = 100;
 
-  public static OBSTACLE_AMOUNT_MIN: number = 500;
-  public static OBSTACLE_AMOUNT_MAX: number = 550;
-  public static SOIL_TILE_AMOUNT_MIN: number = 300;
-  public static SOIL_TILE_AMOUNT_MAX: number = 330;
+  public static OBSTACLE_AMOUNT_MIN: number = 350;
+  public static OBSTACLE_AMOUNT_MAX: number = 400;
+  public static SOIL_TILE_AMOUNT_MIN: number = 100;
+  public static SOIL_TILE_AMOUNT_MAX: number = 130;
 }

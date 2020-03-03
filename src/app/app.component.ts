@@ -190,7 +190,7 @@ export class AppComponent implements OnInit {
 
   go = () => {
     if (this.clientPlayer.hitPoints > 0 && !this.signalRService.winner) {
-      this.clientPlayer.move(this.clientPlayer, this.clientPlayer.direction, this.postMovementAction, OnCollisionAction.Stop, this.signalRService.emptySpaces, this.signalRService.obstacles);
+      this.clientPlayer.move(this.clientPlayer, this.clientPlayer.direction, this.postMovementAction, OnCollisionAction.Stop, this.signalRService.emptySpaces, this.signalRService.obstacles, () => { this.manaAmount = 0; });
     }
   }
 

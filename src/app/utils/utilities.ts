@@ -80,7 +80,8 @@ export class Utilities {
     }
   }
 
-  public static fourDirectionMoveFunction = (mover, direction: number, postMovementAction: Function, onCollisionAction: OnCollisionAction = OnCollisionAction.Stop, emptySpaces: HasPosition[] = [], obstacles: Obstacle[] = []) => {
+  public static fourDirectionMoveFunction = (mover, direction: number, postMovementAction: Function,
+    onCollisionAction: OnCollisionAction = OnCollisionAction.Stop, emptySpaces: HasPosition[] = [], obstacles: Obstacle[] = [], actionIfMoved: Function = () => {}) => {
     mover.direction = direction;
     const xAndYIncrement = {
       x: 0,
@@ -104,14 +105,19 @@ export class Utilities {
     }
     mover.positionX += xAndYIncrement.x;
     mover.positionY += xAndYIncrement.y;
+
+    // Mover collides
+    let moverCollided = false;
     if (onCollisionAction === OnCollisionAction.Destroy) {
       Utilities.doItemCollision(mover, emptySpaces, obstacles, () => {
         mover.isDestroyed = true;
+        moverCollided = true;
       });
     } else if (onCollisionAction === OnCollisionAction.Stop) {
       Utilities.doItemCollision(mover, emptySpaces, obstacles, () => {
         mover.positionX -= xAndYIncrement.x;
         mover.positionY -= xAndYIncrement.y;
+        moverCollided = true;
       });
     }
 
@@ -122,12 +128,14 @@ export class Utilities {
       } else if (onCollisionAction === OnCollisionAction.Stop) {
         mover.positionX = Constants.PLAY_AREA_SIZE_X - 1;
       }
+      moverCollided = true;
     } else if (mover.positionX < 0) {
       if (onCollisionAction === OnCollisionAction.Destroy) {
         mover.isDestroyed = true;
       } else if (onCollisionAction === OnCollisionAction.Stop) {
         mover.positionX = 0;
       }
+      moverCollided = true;
     }
     if ((mover.positionY + 1) > Constants.PLAY_AREA_SIZE_Y) {
       if (onCollisionAction === OnCollisionAction.Destroy) {
@@ -135,12 +143,18 @@ export class Utilities {
       } else if (onCollisionAction === OnCollisionAction.Stop) {
         mover.positionY = Constants.PLAY_AREA_SIZE_Y - 1;
       }
+      moverCollided = true;
     } else if (mover.positionY < 0) {
       if (onCollisionAction === OnCollisionAction.Destroy) {
         mover.isDestroyed = true;
       } else if (onCollisionAction === OnCollisionAction.Stop) {
         mover.positionY = 0;
       }
+      moverCollided = true;
+    }
+
+    if (!moverCollided) {
+      actionIfMoved();
     }
     postMovementAction();
   }

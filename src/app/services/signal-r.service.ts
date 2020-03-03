@@ -202,8 +202,10 @@ export class SignalRService {
   }
 
   public broadcastPlayerHitFruit = (soilTile: SoilInfo, playerId: string) => {
-    this.hubConnection.invoke('broadcastPlayerHitFruit', soilTile.positionX, soilTile.positionY, playerId)
-    .catch(err => console.error(err));
+    if (soilTile) {
+      this.hubConnection.invoke('broadcastPlayerHitFruit', soilTile.positionX, soilTile.positionY, playerId)
+      .catch(err => console.error(err));
+    }
   }
 
   public addPlayerGotPointsListener = (player: Player) => {
