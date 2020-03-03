@@ -11,6 +11,7 @@ import { TerrainInfo } from '../models/TerrainInfo.model';
 import { MapInfo } from '../models/MapInfo.model';
 import { SoilInfo } from '../models/SoilInfo.model';
 import { Coordinate } from '../models/Coordinate.model';
+import { PlayerGotPoints } from '../models/PlayerGotPoints.model';
 
 @Injectable({
   providedIn: 'root'
@@ -153,17 +154,6 @@ export class SignalRService {
     })
   }
 
-  public broadcastGetEmptySpaces = () => {
-    this.hubConnection.invoke('broadcastGetEmptySpaces')
-    .catch(err => console.error(err));
-  }
-
-  public addBroadcastGetEmptySpacesListener = () => {
-    this.hubConnection.on('broadcastGetEmptySpaces', (data: HasPosition[]) => {
-      this.emptySpaces = data;
-    })
-  }
-
   public broadcastPlayerWins = (message: Player) => {
     this.hubConnection.invoke('broadcastPlayerWins', message)
     .catch(err => console.error(err));
@@ -195,6 +185,8 @@ export class SignalRService {
     })
   }
 
+  //TODO: Refactor game state to its own class and have only signalR invocations here
+
   public getTileSoilLevelAndFruitStatus = (coordinate: Coordinate) => {
     const soilTile = this.soilTiles.find(soilTile => soilTile.positionX === coordinate.positionX && soilTile.positionY === coordinate.positionY);
     return soilTile ? { soilLevel: soilTile.soilLevel, hasFruit: soilTile.hasFruit } : { soilLevel: 0, hasFruit: false };
@@ -202,7 +194,23 @@ export class SignalRService {
 
   public addFruitInfoListener = () => {
     this.hubConnection.on('fruitInfo', (soilTiles: SoilInfo[]) => {
-      this.soilTiles = soilTiles;
+      console.log(soilTiles)
+      soilTiles.forEach(soilTile => {
+        this.soilTiles.find(tile => tile.positionX === soilTile.positionX && tile.positionY === soilTile.positionY).hasFruit = soilTile.hasFruit;
+      });
+    })
+  }
+
+  public broadcastPlayerHitFruit = (soilTile: SoilInfo, playerId: string) => {
+    this.hubConnection.invoke('broadcastPlayerHitFruit', soilTile.positionX, soilTile.positionY, playerId)
+    .catch(err => console.error(err));
+  }
+
+  public addPlayerGotPointsListener = (player: Player) => {
+    this.hubConnection.on('playerGotPoints', (playerGotPoints: PlayerGotPoints) => {
+      if (player.id === playerGotPoints.playerId) {
+        player.score += playerGotPoints.amount;
+      }
     })
   }
 }

@@ -8,6 +8,7 @@ import { Constants } from './constants/constants';
 import { Utilities } from './utils/utilities';
 import { OnCollisionAction } from './enums/enums';
 import { Obstacle } from './models/Obstacle.model';
+import { SoilInfo } from './models/SoilInfo.model';
 
 
 //TODO: Refactor different entities into their own files (Player etc)
@@ -52,10 +53,10 @@ export class AppComponent implements OnInit {
     this.signalRService.addBroadcastGetObstaclesListener();
     this.signalRService.addBroadcastFireballDataMessageListener(this.clientPlayer);
     this.signalRService.addBroadcastFireballHitPlayerMessageListener(this.clientPlayer);
-    this.signalRService.addBroadcastGetEmptySpacesListener();
     this.signalRService.addBroadcastPlayerWinsListener();
     this.signalRService.addBroadcastDigMessageListener();
     this.signalRService.addFruitInfoListener();
+    this.signalRService.addPlayerGotPointsListener(this.clientPlayer);
 
     this.signalRService.addBroadcastMapInfoListener(this.setStartingPosition)
 
@@ -221,6 +222,15 @@ export class AppComponent implements OnInit {
   }
 
   postMovementAction = () => {
+    this.checkForCollisionWithFruit();
     this.broadcastPlayerData();
+  }
+
+  checkForCollisionWithFruit = () => {
+    Utilities.doItemCollision(
+      this.clientPlayer,
+      this.signalRService.emptySpaces,
+      this.signalRService.soilTiles.filter(soilTile => soilTile.hasFruit),
+      (soilTile: SoilInfo) => { this.signalRService.broadcastPlayerHitFruit(soilTile, this.clientPlayer.id); });
   }
 }
