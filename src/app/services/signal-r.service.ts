@@ -29,7 +29,7 @@ export class SignalRService {
 
   public startConnection = () => {
     const isProductionEnvironment = environment.production;
-    const serverBaseUrl = isProductionEnvironment ? 'https://tuomas-angular-combat-server.azurewebsites.net' : 'https://localhost:44342';//'https://localhost:5001';
+    const serverBaseUrl = isProductionEnvironment ? 'https://tuomas-angular-combat-server.azurewebsites.net' : 'http://localhost:5000'; // If the connection doesn't work right away, maybe try one of these: 'https://localhost:44342';//'https://localhost:5001';
     this.hubConnection = new signalR.HubConnectionBuilder()
                             .withUrl(serverBaseUrl + '/hub')
                             .build();

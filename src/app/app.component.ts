@@ -71,7 +71,7 @@ export class AppComponent implements OnInit {
 
   private startHttpRequest = () => {
     const isProductionEnvironment = environment.production;
-    const serverBaseUrl = isProductionEnvironment ? 'https://tuomas-angular-combat-server.azurewebsites.net/api' : 'https://localhost:44342/api'; //'https://localhost:5001/api';
+    const serverBaseUrl = isProductionEnvironment ? 'https://tuomas-angular-combat-server.azurewebsites.net/api' : 'http://localhost:5000/api'; // If the connection doesn't work right away, maybe try one of these: 'https://localhost:44342/api'; //'https://localhost:5001/api';
     this.http.get(serverBaseUrl + '/hub')
       .subscribe(res => {
         console.log(res);
